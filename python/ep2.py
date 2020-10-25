@@ -201,7 +201,10 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     plt.clf()
 
     scores = model.evaluate(x_test, y_test, verbose=1)
-    print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+    titulo = nome + ' - Dropout: ' + str(dropout)
+    acc = "%s: %.2f%%" % (titulo, scores[1]*100)
+    print(acc)
     print('Score: ' + str(scores))
-
+    with open(filename, 'a+') as f:
+        f.write(acc)
 myNet(60,emb,'lstm','lstm',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)

@@ -9,6 +9,9 @@ import matplotlib.pyplot as plt
 from gensim.models import KeyedVectors
 from tensorflow import keras
 import numpy as np
+from tensorflow.keras.losses import sparse_categorical_crossentropy
+from tensorflow.keras import layers
+from keras.layers import Dense, Dropout, LSTM
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
@@ -57,6 +60,10 @@ plt.title('Histograma de Palavras')
 plt.legend()
 plt.hist(Words, bins=[0,5,10,15,20,25,30,35,40,45,50,55,60,65,70,75,80,85], histtype='bar',align='mid', color='c',edgecolor='black',label='palavras/frase')
 plt.savefig('palavras_por_frase_histograma.png')
+plt.clf()
+
+# Tamanho máximo de frase escolhida
+SEQUENCE_MAXLEN = 60
 
 ##
 ## CODIFICACAO / Embedding
@@ -100,19 +107,25 @@ b2wCorpus.review_text = b2wCorpus.review_text.apply(lambda x: codifica(x))
 b2wCorpus['ord'] = b2wCorpus.apply(lambda row: len(row.review_text), axis=1)
 b2wCorpus['overall_rating'] = b2wCorpus.overall_rating.apply(lambda x: x - 1)
 
-# Filtra somente frases com  10<tamanho do palavras<60
+# Filtra somente frases com  10<tamanho do palavras<SEQUENCE_MAXLEN
 b2wCorpus = b2wCorpus.drop(b2wCorpus[b2wCorpus.ord < 10].index)
-b2wCorpus = b2wCorpus.drop(b2wCorpus[b2wCorpus.ord > 60].index)
+b2wCorpus = b2wCorpus.drop(b2wCorpus[b2wCorpus.ord > SEQUENCE_MAXLEN].index)
 b2wCorpus.reset_index(drop=True, inplace=True)
 
 # Padding
-b2wCorpus.review_text = keras.preprocessing.sequence.pad_sequences(b2wCorpus.apply(lambda row: np.reshape(row.review_text,(-1)), axis=1), maxlen=60, padding='post').tolist()
+b2wCorpus.review_text = keras.preprocessing.sequence.pad_sequences(b2wCorpus.apply(lambda row: np.reshape(row.review_text,(-1)), axis=1), maxlen=SEQUENCE_MAXLEN, padding='post').tolist()
 
 print(b2wCorpus.head)
+
+# Emb para camadas Keras
+model = KeyedVectors.load_word2vec_format('word2vec_200k.txt')
+emb = model.get_keras_embedding()
 
 ##
 ## Split de treino, validacao e teste
 ##
+
+print('\nCriando os splits de Treino, Validacao e Teste.')
 
 # Função de split
 def train_validate_test_split(df, train_percent=.65, validate_percent=.1, seed=42):
@@ -129,13 +142,66 @@ def train_validate_test_split(df, train_percent=.65, validate_percent=.1, seed=4
 # Split
 b2wCorpusTrain, b2wCorpusValidate, b2wCorpusTest = train_validate_test_split(b2wCorpus)
 
-pri
+print('\n Dataset de Treino: 65%\n')
 b2wCorpusTrain=b2wCorpusTrain.reindex(b2wCorpusTrain['ord'].sort_values(ascending=False).index)
-b2wCorpusTrain.head()
+print(b2wCorpusTrain.head)
 
+print('\n Dataset de Validação: 10%\n')
 b2wCorpusValidate=b2wCorpusValidate.reindex(b2wCorpusValidate['ord'].sort_values(ascending=False).index)
-b2wCorpusValidate.head
+print(b2wCorpusValidate)
 
+print('\n Dataset de Validação: 25%\n')
 b2wCorpusTest=b2wCorpusTest.reindex(b2wCorpusTest['ord'].sort_values(ascending=False).index)
-b2wCorpusTest.head
+print(b2wCorpusTest.head)
 
+# Criação das séries
+# Treino, Validação e Teste
+x_train =  [ emb for emb in b2wCorpusTrain.review_text]
+y_train =   b2wCorpusTrain.overall_rating
+
+x_val = [ emb for emb in b2wCorpusValidate.review_text ]
+y_val = b2wCorpusValidate.overall_rating
+
+x_test = [ emb for emb in b2wCorpusTest.review_text ]
+y_test = b2wCorpusTest.overall_rating
+
+x_train = np.asarray(x_train)
+x_val =np.asarray(x_val)
+x_test =np.asarray(x_test)
+
+
+def myNet(nome,tipo,dropout,epochs,x_test,y_test):
+    model = keras.Sequential()
+    model.add(layers.Input(shape=(SEQUENCE_MAXLEN, )))
+    model.add(emb)
+    model.add(keras.layers.LSTM(128, dropout=dropout))
+    model.add(keras.layers.Dense(5, activation='softmax'))
+    opt="adam"
+    model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
+    history = model.fit(
+        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val))
+
+    
+    plt.title('Loss: ' + nome + ' - Dropout: ' + str(dropout))
+    plt.xlabel('epochs')
+    plt.ylabel('Loss')
+    plt.plot(history.history['loss'], label='train')
+    plt.plot(history.history['val_loss'], label='valid')
+    plt.legend()
+    plt.savefig('Loss_' + nome + '_-_Dropout_' + str(dropout)+'.png')
+    plt.clf()
+
+    plt.title('Accuracy: ' + nome + ' - Dropout: ' + str(dropout))
+    plt.xlabel('epochs')
+    plt.ylabel('accuracy')
+    plt.plot(history.history['accuracy'], label='train')
+    plt.plot(history.history['val_accuracy'], label='valid')
+    plt.legend()
+    plt.savefig('Accuracy_' + nome + '_-_Dropout_' + str(dropout)+'.png')
+    plt.clf()
+
+    scores = model.evaluate(x_test, y_test, verbose=1)
+    print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+    print('Score: ' + str(scores))
+
+myNet('lstm','lstm',0.5,20,x_test,y_test)

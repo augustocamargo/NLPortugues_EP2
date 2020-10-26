@@ -13,6 +13,7 @@ from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras import layers
 from keras.layers import Dense, Dropout, LSTM
 import tensorflow as tf
+import pickle
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
@@ -180,22 +181,27 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     model.add(emb)
     if tipo == 'lstm':
         model.add(keras.layers.LSTM(128,dropout=dropout))
+        opt="adam"
     else:
         forward_layer = keras.layers.LSTM(32, activation='relu',dropout=dropout)
         backward_layer = keras.layers.LSTM(32, activation='relu', go_backwards=True,dropout=dropout)
         model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
         model.add(keras.layers.Dropout(dropout))
+        opt = tf.keras.optimizers.SGD(learning_rate=.01, momentum=.9)
     model.add(keras.layers.Dense(5, activation='softmax'))
-    opt="adam"
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
     checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath="weights.hdf5", verbose=1, save_best_only=True)
+    es =  tf.keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
     history = model.fit(
-        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
+        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer,es])
 
 ##
 ## It's all about the results!
 ##
     
+    with open('History_' + nome + '_-_Dropout_' + str(dropout)+'.hist', 'wb') as h:
+        pickle.dump(history.history, h)
+
     plt.title('Loss: ' + nome + ' - Dropout: ' + str(dropout))
     plt.xlabel('epochs')
     plt.ylabel('Loss')

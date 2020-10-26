@@ -17,3 +17,8 @@ Acuracia - bidirecional - Dropout: 0: 28.57%
 Acuracia - bidirecional - Dropout: 0: 59.90%
 --
 Acuracia - bidirecional - Dropout: 0: 60.32%
+Acuracia - bidirecional - Dropout: 0.25: 60.11%
+Acuracia - bidirecional - Dropout: 0.5: 58.20%
+Acuracia - lstm - Dropout: 0: 59.87%
+Acuracia - lstm - Dropout: 0.25: 61.05%
+Acuracia - lstm - Dropout: 0.5: 60.76%

@@ -174,14 +174,15 @@ x_test =np.asarray(x_test)
 ## nn here go!
 ##
 def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_val,x_test,y_test):
+    print('\n### Running: ' + nome + ' - Dropout: ' + str(dropout) + ' ###\n')
     model = keras.Sequential()
     model.add(layers.Input(shape=(SEQUENCE_MAXLEN, )))
     model.add(emb)
     if tipo == 'lstm':
         model.add(keras.layers.LSTM(128))
     else:
-        forward_layer = keras.layers.LSTM(128, )
-        backward_layer = keras.layers.LSTM(128,  go_backwards=True)
+        forward_layer = keras.layers.LSTM(32, activation='relu')
+        backward_layer = keras.layers.LSTM(32, activation='relu', go_backwards=True)
         model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
         #model.add(keras.layers.Bidirectional(layers.LSTM(128, return_sequences=True, return_state=True, time_major=False),merge_mode='concat'))
     model.add(keras.layers.Dropout(dropout))
@@ -190,7 +191,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
     checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath="weights.hdf5", verbose=1, save_best_only=True)
     history = model.fit(
-        x= x_train, y=y_train, batch_size=1, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
+        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
 
 ##
 ## It's all about the results!

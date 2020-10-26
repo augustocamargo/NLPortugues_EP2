@@ -12,6 +12,7 @@ import numpy as np
 from tensorflow.keras.losses import sparse_categorical_crossentropy
 from tensorflow.keras import layers
 from keras.layers import Dense, Dropout, LSTM
+import tensorflow as tf
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
@@ -174,12 +175,19 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     model = keras.Sequential()
     model.add(layers.Input(shape=(SEQUENCE_MAXLEN, )))
     model.add(emb)
-    model.add(keras.layers.LSTM(128, dropout=dropout))
+    if tipo == 'lstm':
+        model.add(keras.layers.LSTM(128))
+    else:
+        forward_layer = keras.layers.LSTM(128, return_sequences=True)
+        backward_layer = keras.layers.LSTM(128, return_sequences=True, go_backwards=True)
+        model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
+    model.add(keras.layers.Dropout(dropout))
     model.add(keras.layers.Dense(5, activation='softmax'))
     opt="adam"
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
+    checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath="weights.hdf5", verbose=1, save_best_only=True)
     history = model.fit(
-        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val))
+        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
 
     
     plt.title('Loss: ' + nome + ' - Dropout: ' + str(dropout))
@@ -200,6 +208,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     plt.savefig('Accuracy_' + nome + '_-_Dropout_' + str(dropout)+'.png')
     plt.clf()
 
+    model.load_weights('weights.hdf5')
     scores = model.evaluate(x_test, y_test, verbose=1)
     titulo = nome + ' - Dropout: ' + str(dropout)
     acc = "Acuracia - %s: %.2f%%" % (titulo, scores[1]*100)
@@ -209,6 +218,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
         f.write(acc + '\n')
         f.close()
 
+myNet(60,emb,'lstm','bidirecional',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)

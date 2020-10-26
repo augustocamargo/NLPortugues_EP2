@@ -16,7 +16,7 @@ import tensorflow as tf
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
-b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'])
+b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'],nrows=500)
 
 ##
 ## PRE-PROCESSAMENTO
@@ -64,7 +64,7 @@ plt.savefig('palavras_por_frase_histograma.png')
 plt.clf()
 
 # Tamanho máximo de frase escolhida
-SEQUENCE_MAXLEN = 60
+SEQUENCE_MAXLEN = 50
 
 ##
 ## CODIFICACAO / Embedding
@@ -179,13 +179,12 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     model.add(layers.Input(shape=(SEQUENCE_MAXLEN, )))
     model.add(emb)
     if tipo == 'lstm':
-        model.add(keras.layers.LSTM(128))
+        model.add(keras.layers.LSTM(128,dropout=dropout))
     else:
-        forward_layer = keras.layers.LSTM(32, activation='relu')
-        backward_layer = keras.layers.LSTM(32, activation='relu', go_backwards=True)
+        forward_layer = keras.layers.LSTM(32, activation='relu',dropout=dropout)
+        backward_layer = keras.layers.LSTM(32, activation='relu', go_backwards=True,dropout=dropout)
         model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
-        #model.add(keras.layers.Bidirectional(layers.LSTM(128, return_sequences=True, return_state=True, time_major=False),merge_mode='concat'))
-    model.add(keras.layers.Dropout(dropout))
+        model.add(keras.layers.Dropout(dropout))
     model.add(keras.layers.Dense(5, activation='softmax'))
     opt="adam"
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
@@ -228,9 +227,9 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
 ##
 ## Run, forest, run!
 ##
-myNet(60,emb,'bidirecional','bidirecional',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'bidirecional','bidirecional',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'bidirecional','bidirecional',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'lstm','lstm',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'lstm','lstm',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'lstm','lstm',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'bidirecional','bidirecional',0,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'bidirecional','bidirecional',0.25,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'bidirecional','bidirecional',0.5,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'lstm','lstm',0,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'lstm','lstm',0.25,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'lstm','lstm',0.5,50,x_train,y_train,x_val,y_val,x_test,y_test)

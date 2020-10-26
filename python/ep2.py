@@ -15,7 +15,7 @@ from keras.layers import Dense, Dropout, LSTM
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
-b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'])
+b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'],nrows=1000)
 
 ##
 ## PRE-PROCESSAMENTO
@@ -28,9 +28,9 @@ d = b2wCorpus.index[b2wCorpus["overall_rating"] > 5].tolist()
 b2wCorpus=b2wCorpus.drop(b2wCorpus.index[d])
 
 # Cleanning & Stopwords
-text_cleaning_re = "@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+"
-stop_words = nltk.corpus.stopwords.words('portuguese')
 def cleanning(text, stem=False):
+  stop_words = nltk.corpus.stopwords.words('portuguese')
+  text_cleaning_re = "@\S+|https?:\S+|http?:\S|[^A-Za-z0-9]+"
   text = unidecode(text)
   text = re.sub(text_cleaning_re, ' ', str(text).lower()).strip()
   text = re.sub("\d+", "", text)
@@ -202,9 +202,13 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
 
     scores = model.evaluate(x_test, y_test, verbose=1)
     titulo = nome + ' - Dropout: ' + str(dropout)
-    acc = "%s: %.2f%%" % (titulo, scores[1]*100)
+    acc = "Acuracia - %s: %.2f%%" % (titulo, scores[1]*100)
     print(acc)
     print('Score: ' + str(scores))
-    with open(filename, 'a+') as f:
-        f.write(acc)
+    with open('resultados.txt', 'a+') as f:
+        f.write(acc + '\n')
+        f.close()
+
+myNet(60,emb,'lstm','lstm',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'lstm','lstm',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)

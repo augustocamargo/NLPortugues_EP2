@@ -4,3 +4,4 @@ Acuracia - lstm - Dropout: 0.5: 34.13%
 Acuracia - lstm - Dropout: 0: 28.57%
 Acuracia - lstm - Dropout: 0.25: 27.78%
 Acuracia - lstm - Dropout: 0.5: 33.33%
+Acuracia - lstm - Dropout: 0: 45.24%

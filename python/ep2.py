@@ -16,7 +16,7 @@ import tensorflow as tf
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
-b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'],nrows=1000)
+b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'])
 
 ##
 ## PRE-PROCESSAMENTO
@@ -180,16 +180,17 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     if tipo == 'lstm':
         model.add(keras.layers.LSTM(128))
     else:
-        forward_layer = keras.layers.LSTM(128, return_sequences=True)
-        backward_layer = keras.layers.LSTM(128, return_sequences=True, go_backwards=True)
+        forward_layer = keras.layers.LSTM(128, )
+        backward_layer = keras.layers.LSTM(128,  go_backwards=True)
         model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
+        #model.add(keras.layers.Bidirectional(layers.LSTM(128, return_sequences=True, return_state=True, time_major=False),merge_mode='concat'))
     model.add(keras.layers.Dropout(dropout))
     model.add(keras.layers.Dense(5, activation='softmax'))
     opt="adam"
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
     checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath="weights.hdf5", verbose=1, save_best_only=True)
     history = model.fit(
-        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
+        x= x_train, y=y_train, batch_size=1, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
 
 ##
 ## It's all about the results!
@@ -226,7 +227,9 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
 ##
 ## Run, forest, run!
 ##
-myNet(60,emb,'lstm','bidirecional',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'bidirecional','bidirecional',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'bidirecional','bidirecional',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(60,emb,'bidirecional','bidirecional',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0.5,20,x_train,y_train,x_val,y_val,x_test,y_test)

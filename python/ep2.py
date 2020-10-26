@@ -16,7 +16,7 @@ import tensorflow as tf
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
-b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'],nrows=500)
+b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'])
 
 ##
 ## PRE-PROCESSAMENTO

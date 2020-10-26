@@ -170,7 +170,9 @@ x_train = np.asarray(x_train)
 x_val =np.asarray(x_val)
 x_test =np.asarray(x_test)
 
-
+##
+## nn here go!
+##
 def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_val,x_test,y_test):
     model = keras.Sequential()
     model.add(layers.Input(shape=(SEQUENCE_MAXLEN, )))
@@ -189,6 +191,9 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     history = model.fit(
         x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer])
 
+##
+## It's all about the results!
+##
     
     plt.title('Loss: ' + nome + ' - Dropout: ' + str(dropout))
     plt.xlabel('epochs')
@@ -218,6 +223,9 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
         f.write(acc + '\n')
         f.close()
 
+##
+## Run, forest, run!
+##
 myNet(60,emb,'lstm','bidirecional',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0,20,x_train,y_train,x_val,y_val,x_test,y_test)
 myNet(60,emb,'lstm','lstm',0.25,20,x_train,y_train,x_val,y_val,x_test,y_test)

@@ -14,6 +14,11 @@ from tensorflow.keras import layers
 from keras.layers import Dense, Dropout, LSTM
 import tensorflow as tf
 import pickle
+import os
+
+##
+## São necessários dois inputs para rodar este script: 2W-Reviews01.csv e cbow_s50.txt
+##
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
@@ -171,20 +176,26 @@ x_train = np.asarray(x_train)
 x_val =np.asarray(x_val)
 x_test =np.asarray(x_test)
 
+if os.path.exists("resultados.txt"):
+    os.remove("resultados.txt")
+
 ##
 ## nn here go!
 ##
-def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_val,x_test,y_test):
-    print('\n### Running: ' + nome + ' - Dropout: ' + str(dropout) + ' ###\n')
+def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,y_train,x_val,y_val,x_test,y_test):
+      
+    if os.path.exists("weights.hdf5"):
+        os.remove("weights.hdf5")
+
     model = keras.Sequential()
     model.add(layers.Input(shape=(SEQUENCE_MAXLEN, )))
     model.add(emb)
-    if tipo == 'lstm':
-        model.add(keras.layers.LSTM(128,dropout=dropout))
+    if tipo == 'LSTM':
+        model.add(keras.layers.LSTM(units,dropout=dropout))
         opt="adam"
     else:
-        forward_layer = keras.layers.LSTM(32, activation='relu',dropout=dropout)
-        backward_layer = keras.layers.LSTM(32, activation='relu', go_backwards=True,dropout=dropout)
+        forward_layer = keras.layers.LSTM(units, activation='relu',dropout=dropout)
+        backward_layer = keras.layers.LSTM(units, activation='relu', go_backwards=True,dropout=dropout)
         model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
         model.add(keras.layers.Dropout(dropout))
         opt = tf.keras.optimizers.SGD(learning_rate=.01, momentum=.9)
@@ -193,36 +204,36 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
     checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath="weights.hdf5", verbose=1, save_best_only=True)
     es =  tf.keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
     history = model.fit(
-        x= x_train, y=y_train, batch_size=16, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer,es])
+        x= x_train, y=y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer,es])
 
 ##
 ## It's all about the results!
 ##
     
-    with open('History_' + nome + '_-_Dropout_' + str(dropout)+'.hist', 'wb') as h:
+    with open('History_'  + '_ nome' + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.hist', 'wb') as h:
         pickle.dump(history.history, h)
 
-    plt.title('Loss: ' + nome + ' - Dropout: ' + str(dropout))
+    plt.title('Loss: ' + nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size))
     plt.xlabel('epochs')
     plt.ylabel('Loss')
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='valid')
     plt.legend()
-    plt.savefig('Loss_' + nome + '_-_Dropout_' + str(dropout)+'.png')
+    plt.savefig('Loss'  + '_ nome' + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
     plt.clf()
 
-    plt.title('Accuracy: ' + nome + ' - Dropout: ' + str(dropout))
+    plt.title('Accuracy: ' + nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size))
     plt.xlabel('epochs')
     plt.ylabel('accuracy')
     plt.plot(history.history['accuracy'], label='train')
     plt.plot(history.history['val_accuracy'], label='valid')
     plt.legend()
-    plt.savefig('Accuracy_' + nome + '_-_Dropout_' + str(dropout)+'.png')
+    plt.savefig('Accuracy' + '_ nome' + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
     plt.clf()
 
     model.load_weights('weights.hdf5')
     scores = model.evaluate(x_test, y_test, verbose=1)
-    titulo = nome + ' - Dropout: ' + str(dropout)
+    titulo = nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size)
     acc = "Acuracia - %s: %.2f%%" % (titulo, scores[1]*100)
     print(acc)
     print('Score: ' + str(scores))
@@ -233,9 +244,14 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,dropout,epochs,x_train,y_train,x_val,y_v
 ##
 ## Run, forest, run!
 ##
-myNet(60,emb,'bidirecional','bidirecional',0,50,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'bidirecional','bidirecional',0.25,50,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'bidirecional','bidirecional',0.5,50,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'lstm','lstm',0,50,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'lstm','lstm',0.25,50,x_train,y_train,x_val,y_val,x_test,y_test)
-myNet(60,emb,'lstm','lstm',0.5,50,x_train,y_train,x_val,y_val,x_test,y_test)
+for net in ['LSTM','Bidirecional']:
+    for units in [32,64,128,256]:
+        for dropouts in [0,.25,.5]:
+            for batch_size in [16,32,64]:
+                print('\n#####################################################################\n')
+                print('#####################################################################\n')
+                print('Running now: '+ net + '_Units_' + str(units) + '_Dropouts_' + str(dropouts) + '_Batchs_' + str(batch_size))
+                print('\n#####################################################################\n')
+                print('#####################################################################\n')
+                myNet(60,emb,net,net,units,dropouts,batch_size,50,x_train,y_train,x_val,y_val,x_test,y_test)
+            

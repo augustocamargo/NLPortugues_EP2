@@ -15,6 +15,7 @@ from keras.layers import Dense, Dropout, LSTM
 import tensorflow as tf
 import pickle
 import os
+from multiprocessing import Pool
 
 ##
 ## São necessários dois inputs para rodar este script: 2W-Reviews01.csv e cbow_s50.txt
@@ -22,7 +23,7 @@ import os
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
-b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'],nrows=500)
+b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'])
 
 ##
 ## PRE-PROCESSAMENTO
@@ -201,16 +202,17 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
         opt = tf.keras.optimizers.SGD(learning_rate=.01, momentum=.9)
     model.add(keras.layers.Dense(5, activation='softmax'))
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
-    checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath="weights.hdf5", verbose=1, save_best_only=True)
+    checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath='weights' + '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) + '.hdf5', verbose=1, save_best_only=True)
     es =  tf.keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5)
+    csv_logger = tf.keras.callbacks.CSVLogger('History_Log'  + '_' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.csv', append=True, separator=',')
     history = model.fit(
-        x= x_train, y=y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer,es])
+        x= x_train, y=y_train, batch_size=batch_size, epochs=epochs, validation_data=(x_val, y_val), callbacks=[checkpointer,es,csv_logger])
 
 ##
 ## It's all about the results!
 ##
     
-    with open('History'  + '_' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.hist', 'wb') as h:
+    with open('History_Dump'  + '_' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.hist', 'wb') as h:
         pickle.dump(history.history, h)
 
     plt.title('Loss: ' + nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size))
@@ -231,13 +233,13 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
     plt.savefig('Accuracy' + '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
     plt.clf()
 
-    model.load_weights('weights.hdf5')
+    model.load_weights('weights' + '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) + '.hdf5')
     scores = model.evaluate(x_test, y_test, verbose=1)
     titulo = nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size)
     acc = "Acuracia - %s: %.2f%%" % (titulo, scores[1]*100)
     print(acc)
     print('Score: ' + str(scores))
-    with open('resultados.txt', 'a+') as f:
+    with open('resultados' '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) + '.txt', 'a+') as f:
         f.write(acc + '\n')
         f.close()
 

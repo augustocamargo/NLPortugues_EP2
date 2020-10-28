@@ -1,0 +1,1 @@
+Acuracia - LSTM - Units: 64 - Dropouts: 0.25 - Batchs: 32: 60.85%

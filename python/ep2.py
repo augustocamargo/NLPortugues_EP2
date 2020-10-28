@@ -22,7 +22,7 @@ import os
 
 # Corpus da B2W, sem cortes
 print('\n Importando aquivo B2W-Reviews01.csv...')
-b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'])
+b2wCorpus = pd.read_csv("B2W-Reviews01.csv",";",usecols=['review_text','overall_rating'],nrows=500)
 
 ##
 ## PRE-PROCESSAMENTO
@@ -210,7 +210,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
 ## It's all about the results!
 ##
     
-    with open('History_'  + '_ nome' + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.hist', 'wb') as h:
+    with open('History'  + '_' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.hist', 'wb') as h:
         pickle.dump(history.history, h)
 
     plt.title('Loss: ' + nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size))
@@ -219,7 +219,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
     plt.plot(history.history['loss'], label='train')
     plt.plot(history.history['val_loss'], label='valid')
     plt.legend()
-    plt.savefig('Loss'  + '_ nome' + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
+    plt.savefig('Loss'  + '_' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
     plt.clf()
 
     plt.title('Accuracy: ' + nome + ' - Units: ' + str(units) + ' - Dropouts: ' + str(dropout) + ' - Batchs: ' + str(batch_size))
@@ -228,7 +228,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
     plt.plot(history.history['accuracy'], label='train')
     plt.plot(history.history['val_accuracy'], label='valid')
     plt.legend()
-    plt.savefig('Accuracy' + '_ nome' + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
+    plt.savefig('Accuracy' + '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) +'.png')
     plt.clf()
 
     model.load_weights('weights.hdf5')
@@ -244,7 +244,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
 ##
 ## Run, forest, run!
 ##
-for net in ['LSTM','Bidirecional']:
+for net in ['LSTM','Bidirectional']:    
     for units in [32,64,128,256]:
         for dropouts in [0,.25,.5]:
             for batch_size in [16,32,64]:
@@ -253,5 +253,5 @@ for net in ['LSTM','Bidirecional']:
                 print('Running now: '+ net + '_Units_' + str(units) + '_Dropouts_' + str(dropouts) + '_Batchs_' + str(batch_size))
                 print('\n#####################################################################\n')
                 print('#####################################################################\n')
-                myNet(60,emb,net,net,units,dropouts,batch_size,50,x_train,y_train,x_val,y_val,x_test,y_test)
+                myNet(SEQUENCE_MAXLEN,emb,net,net,units,dropouts,batch_size,50,x_train,y_train,x_val,y_val,x_test,y_test)
             

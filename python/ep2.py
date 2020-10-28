@@ -199,7 +199,8 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
         backward_layer = keras.layers.LSTM(units, activation='relu', go_backwards=True,dropout=dropout)
         model.add(keras.layers.Bidirectional(forward_layer, backward_layer=backward_layer))
         model.add(keras.layers.Dropout(dropout))
-        opt = tf.keras.optimizers.SGD(learning_rate=.01, momentum=.9)
+        #opt = tf.keras.optimizers.SGD(learning_rate=.01, momentum=.9)
+        opt="adam"
     model.add(keras.layers.Dense(5, activation='softmax'))
     model.compile(optimizer=opt,loss=sparse_categorical_crossentropy, metrics=["accuracy"])
     checkpointer = tf.keras.callbacks.ModelCheckpoint(filepath='weights' + '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) + '.hdf5', verbose=1, save_best_only=True)

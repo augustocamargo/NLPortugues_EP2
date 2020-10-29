@@ -247,7 +247,7 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
 ##
 ## Run, forest, run!
 ##
-for net in ['LSTM','Bidirectional']:    
+for net in ['Bidirectional']:    
     for units in [32,64,128,256]:
         for dropouts in [0,.25,.5]:
             for batch_size in [16,32,64]:

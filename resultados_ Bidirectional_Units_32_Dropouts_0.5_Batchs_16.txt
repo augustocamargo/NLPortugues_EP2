@@ -1,0 +1,1 @@
+Acuracia - Bidirectional - Units: 32 - Dropouts: 0.5 - Batchs: 16: 58.46%

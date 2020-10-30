@@ -243,11 +243,22 @@ def myNet(SEQUENCE_MAXLEN,emb,nome,tipo,units,dropout,batch_size,epochs,x_train,
     with open('resultados' '_ ' + nome + '_Units_' + str(units) + '_Dropouts_' + str(dropout) + '_Batchs_' + str(batch_size) + '.txt', 'a+') as f:
         f.write(acc + '\n')
         f.close()
+##
+## Run, run little Forest!
+##
+myNet(SEQUENCE_MAXLEN,emb,'LSTM','LSTM',128,0,32,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(SEQUENCE_MAXLEN,emb,'LSTM','LSTM',128,0.25,32,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(SEQUENCE_MAXLEN,emb,'LSTM','LSTM',128,0.5,32,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(SEQUENCE_MAXLEN,emb,'Bidirectional','Bidirectional',32,0,32,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(SEQUENCE_MAXLEN,emb,'Bidirectional','Bidirectional',32,0.25,32,50,x_train,y_train,x_val,y_val,x_test,y_test)
+myNet(SEQUENCE_MAXLEN,emb,'Bidirectional','Bidirectional',32,0.5,32,50,x_train,y_train,x_val,y_val,x_test,y_test)
+
+exit()
 
 ##
-## Run, forest, run!
+## Run, big Forest, run!
 ##
-for net in ['Bidirectional']:    
+for net in ['LSTM','Bidirectional']:    
     for units in [32,64,128,256]:
         for dropouts in [0,.25,.5]:
             for batch_size in [16,32,64]:
